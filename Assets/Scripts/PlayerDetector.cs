@@ -12,7 +12,7 @@ public class PlayerDetector : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (!playerDragScript.ableToMove)
+        if (playerDragScript.freeFly)
         {
             changeToNormal();
             gameObject.GetComponent<CapsuleCollider2D>().enabled = true;
@@ -33,12 +33,10 @@ public class PlayerDetector : MonoBehaviour {
     void changeToNormal()
     {
         CompositeCollider2D cd = GameObject.FindGameObjectWithTag("Ground").GetComponent<CompositeCollider2D>();
-        print(Player.GetComponent<CapsuleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal")));
-        print("WE CHECKING COLLISIONS");
-        if (!Player.GetComponent<CapsuleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal"))) {
+        print(Player.GetComponent<CircleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal")));
+        if (!Player.GetComponent<CircleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal"))) {
             Player.layer = LayerMask.NameToLayer("Normal");
             playerDragScript.collidingInDrag = false;
-            print("we made it");
         }
     }
 
