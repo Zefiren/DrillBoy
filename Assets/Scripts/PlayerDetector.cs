@@ -14,6 +14,7 @@ public class PlayerDetector : MonoBehaviour {
 	void Update () {
         if (playerDragScript.freeFly)
         {
+            print("changing");
             changeToNormal();
             gameObject.GetComponent<CapsuleCollider2D>().enabled = true;
 
@@ -33,7 +34,7 @@ public class PlayerDetector : MonoBehaviour {
     void changeToNormal()
     {
         CompositeCollider2D cd = GameObject.FindGameObjectWithTag("Ground").GetComponent<CompositeCollider2D>();
-        print(Player.GetComponent<CircleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal")));
+        //print(Player.GetComponent<CircleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal")));
         if (!Player.GetComponent<CircleCollider2D>().IsTouchingLayers(LayerMask.NameToLayer("Normal"))) {
             Player.layer = LayerMask.NameToLayer("Normal");
             playerDragScript.collidingInDrag = false;
@@ -42,13 +43,13 @@ public class PlayerDetector : MonoBehaviour {
 
     void OnCollisionExit2D(Collision2D collision)
     {
-        print(collision.gameObject.name);
+        //print(collision.gameObject.name);
     }
 
 
     void OnTriggerEnter2D(Collider2D collision)
     {
-        print("HEY THERE");
+        //print("HEY THERE");
         playerDragScript.collidingInDrag = true;
     }
 }

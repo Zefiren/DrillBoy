@@ -14,10 +14,14 @@ public class ProjectileDragging : MonoBehaviour
     private Ray catapultToProjectile;
     private float maxStretchSqr;
     private bool clickedOn;
-    private Vector2 prevVelocity;
+    public bool firstTime = true;
+    public bool firstClick = true;
+    public Vector2 prevVelocity;
     public bool ableToMove;
     public bool collidingInDrag;
     public bool freeFly;
+    public bool firstUpdate;
+
 
     void Awake()
     {
@@ -27,7 +31,7 @@ public class ProjectileDragging : MonoBehaviour
 
     void Start()
     {
-        LineRendererSetup();
+        //LineRendererSetup();
         freeFly = false;
         rayToMouse = new Ray(catapult.position, Vector3.zero);
         catapultToProjectile = new Ray(catapultLine.transform.position, Vector3.zero);
@@ -44,26 +48,37 @@ public class ProjectileDragging : MonoBehaviour
 
         if (ableToMove)
         {
-            if (!GetComponent<Rigidbody2D>().isKinematic && prevVelocity.sqrMagnitude > GetComponent<Rigidbody2D>().velocity.sqrMagnitude)
+
+            if (!GetComponent<Rigidbody2D>().isKinematic && prevVelocity.sqrMagnitude > GetComponent<Rigidbody2D>().velocity.sqrMagnitude )
             {
-                spring.enabled = false;
+                //spring.enabled = false;
+                Destroy(spring);
+                dc.enabled = true;
+                dc.firstCol = true;
+                //catapultLine.transform.position = GetComponent<Rigidbody2D>().position;
                 //catapultLine.SetPosition (1, catapultLine.transform.position);
                 ableToMove = false;
+                firstClick = true;
                 freeFly = true;
-                catapultLine.enabled = false;
+                //catapultLine.enabled = false;
                 GetComponent<Rigidbody2D>().velocity = prevVelocity;
+                print("released");
             }
 
-            if (!clickedOn)
+            if (!clickedOn )
+            {
                 prevVelocity = GetComponent<Rigidbody2D>().velocity;
+            }
 
-            LineRendererUpdate();
+            //LineRendererUpdate();
         }
         else
         {
-            catapultLine.enabled = false;
+            //catapultLine.enabled = false;
         }
+        firstUpdate = false;
     }
+
 
     void LineRendererSetup()
     {
@@ -74,17 +89,47 @@ public class ProjectileDragging : MonoBehaviour
 
     void OnMouseDown()
     {
-        print("helloooooo?");
-        spring.enabled = false;
+        //spring.enabled = false;
         clickedOn = true;
-        //catapultLine.transform.position = transform.position;
-        catapultLine.SetPosition(0, transform.position);
-        catapultLine.SetPosition(1, transform.position);
+        prevVelocity = Vector2.zero;
+
+        //catapultLine.transform.position = GetComponent<Rigidbody2D>().position;
+        //catapultLine.SetPosition(0, transform.position);
+        //catapultLine.SetPosition(1, transform.position);
+        //rayToMouse = new Ray(catapult.position, Vector3.zero);
+        //catapultToProjectile = new Ray(catapultLine.transform.position, Vector3.zero);
+        //prevVelocity = GetComponent<Rigidbody2D>().velocity;
+        dc.enabled = false;
 
         GetComponent<CircleCollider2D>().enabled = false;
         gameObject.layer = LayerMask.NameToLayer("Shooting");
+        if (!firstTime && firstClick)
+        {
+            print("new spring");
+            //catapult.GetComponent<Rigidbody2D>().position = transform.position;
+
+            gameObject.AddComponent<SpringJoint2D>();
+            spring = GetComponent<SpringJoint2D>();
+            spring.connectedBody = catapult.GetComponent<Rigidbody2D>();
+            spring.distance = 1;
+            spring.dampingRatio = 0;
+            spring.frequency = 2;
+            spring.anchor = new Vector2(0, 0);
+            spring.connectedAnchor = new Vector2(0, 0);
+            spring.autoConfigureDistance = false;
+        }
+        firstClick = false;
     }
 
+    public void resetVars()
+    {
+        GetComponent<Rigidbody2D>().isKinematic = true;
+        catapultLine.enabled = true;
+        catapult.transform.position = GetComponent<Rigidbody2D>().position + new Vector2(0f,0.5f);
+
+        ableToMove = true;
+        freeFly = false;
+    }
     //private void OnCollisionExit2D(Collision2D collision)
     //{
     //    //collidingInDrag = false;  
@@ -95,32 +140,35 @@ public class ProjectileDragging : MonoBehaviour
             return;
         if (dc.currentDigPower > 0)
             return;
-        print("colllided?");
-        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-        GetComponent<Rigidbody2D>().isKinematic = true;
-        catapult.GetComponent<Transform>().position = transform.position;
-        catapultLine.transform.position = transform.position;
+        //GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        
+        //catapult.GetComponent<Transform>().position = transform.position;
+        //catapultLine.transform.position = transform.position;
 
         //catapultLine.SetPosition(0, transform.position);
 
-        catapultLine.SetPosition(1, transform.position);
-        ableToMove = true;
-        freeFly = false;
-        catapultLine.enabled = true;
+        //catapultLine.SetPosition(1, transform.position);
+
     }
 
     void OnMouseUp()
     {
         ableToMove = true;
+        firstTime = false;
         spring.enabled = true;
         GetComponent<Rigidbody2D>().isKinematic = false;
         GetComponent<CircleCollider2D>().enabled = true;
-        clickedOn = false;
+        //GetComponent<Rigidbody2D>().position = transform.position;
+        firstUpdate = true;
+        //prevVelocity = Vector2.zero;
+
+        dc.currentDigPower = dc.maxDigPower;
+            clickedOn = false;
+        print("btwn " + (transform.position - catapult.position));
     }
 
     void Dragging()
     {
-        print(Input.touchCount);
         Vector3 mouseWorldPoint = Camera.main.ScreenToWorldPoint(Input.touches[0].position);
         Vector2 catapultToMouse = mouseWorldPoint - catapult.position;
         if (catapultToMouse.sqrMagnitude > maxStretchSqr)
@@ -136,7 +184,7 @@ public class ProjectileDragging : MonoBehaviour
     void LineRendererUpdate()
     {
         Vector2 catapultToProjectileVec = transform.position - catapultLine.transform.position;
-        //print(catapultLine.GetPosition(0)+" <line player> "+ transform.position);
+        //print(catapultLine.GetPosition(0) + " <line player> " + transform.position);
         //print(catapultToProjectileVec);
         catapultToProjectile.direction = catapultToProjectileVec;
         Vector3 holdPoint = catapultToProjectile.GetPoint(catapultToProjectileVec.magnitude);

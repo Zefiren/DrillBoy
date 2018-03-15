@@ -17,6 +17,7 @@ public class DigController : MonoBehaviour {
     private Vector2 lastVelocity;
     private Vector2 preColVelocity;
     private bool collided=false;
+    public bool firstCol = true;
 
     // Use this for initialization
     void Start () {
@@ -39,15 +40,16 @@ public class DigController : MonoBehaviour {
 
     private void FixedUpdate()
     {
-        lastVelocity = playerRigidbody.velocity;
-        diggingDirection = playerRigidbody.velocity.normalized;
+        if (firstCol)
+        {
+            lastVelocity = playerRigidbody.velocity;
+            diggingDirection = playerRigidbody.velocity.normalized;
+        } 
         if (collided && currentDigPower > 0f)
         {
-            print(playerRigidbody.velocity);
             collided = false;
             playerRigidbody.position = playerRigidbody.position - diggingDirection ;
-            GetComponent<Rigidbody2D>().velocity = diggingDirection * digSpeed/10;
-            print("play velo" +playerRigidbody.velocity);
+            GetComponent<Rigidbody2D>().velocity = diggingDirection * digSpeed;
         }
     }
 
@@ -55,7 +57,6 @@ public class DigController : MonoBehaviour {
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Vector2 hitPos = Vector2.zero;
-        print("why not col");
         if (map != null)
         {
             foreach (ContactPoint2D hit in collision.contacts)
@@ -63,16 +64,20 @@ public class DigController : MonoBehaviour {
                 hitPos.x = hit.point.x - 0.01f * hit.normal.x;
                 hitPos.y = hit.point.y - 0.01f * hit.normal.y;
                 map.SetTile(map.WorldToCell(hitPos), null);
-                print("deleted tile " + map.WorldToCell(hitPos));
             }
         }
         collided = true;
-        print("last vel" + lastVelocity);
-        print("col vel" + playerRigidbody.velocity);
         //digSpeed = digSpeed / 2f;
         playerRigidbody.velocity = lastVelocity;
+        firstCol = false;
+
         //print("new   vel" + playerRigidbody.velocity);
         currentDigPower -= digCost;
+        if (currentDigPower == 0)
+        {
+            playerRigidbody.velocity = Vector2.zero;
+            GetComponent<ProjectileDragging>().resetVars();
+        }
         //print("current" + currentDigPower);
     }
 }
